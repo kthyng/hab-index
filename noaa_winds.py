@@ -47,14 +47,18 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
         url_root_new = 'http://www.ndbc.noaa.gov/data/stdmet/'
     mons = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
             'Sep', 'Oct', 'Nov', 'Dec']
+    url_root_recent = 'http://www.ndbc.noaa.gov/data/realtime2/'
     url_roots = []
     url_roots.append(url_root_his)
     for mon in mons:
         url_roots.append(url_root_new + mon + '/')
+    url_roots.append(url_root_recent)
     
-    p = re.compile(station_id + '\w*\.txt\.gz')
+    p = re.compile(station_id + '\w*\.txt\.gz', re.IGNORECASE)
     noaa_files = []
     for url_root in url_roots:
+        # if 'realtime' in url_root:
+        #     pdb.set_trace()
         lines = urllib2.urlopen(url_root).readlines()
         for line in lines:
             m = p.search(line)
@@ -62,26 +66,34 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
                 # pdb.set_trace()
                 noaa_file = m.group()
                 noaa_files.append(noaa_file)
-                if not os.path.exists(noaa_file):
+                if not noaa_file in os.listdir('.'):
+                # if not os.path.exists(noaa_file):
                     print ' ### Downloading ', url_root + noaa_file
                     urllib.urlretrieve(url_root + noaa_file, noaa_file)
                 else:
                     print ' ### %s already exists. ' % noaa_file
             else: # if txt.gz doesn't exist, check for just .txt
-                ptxt = re.compile(station_id + '\w*\.txt')
+                ptxt = re.compile(station_id + '\w*\.txt', re.IGNORECASE)
                 m = ptxt.search(line)
                 if m:
                     # pdb.set_trace()
                     noaa_file = m.group()
                     noaa_files.append(noaa_file)
-                    if not os.path.exists(noaa_file):
+                    if not noaa_file in os.listdir('.'):
+                    # if not os.path.exists(noaa_file):
                         print ' ### Downloading ', url_root + noaa_file
-                        urllib.urlretrieve(url_root + noaa_file, noaa_file)
+                        temp_fname, headers = urllib.urlretrieve(url_root + noaa_file, noaa_file)
+                        # resave file to a new name
+                        save_fname = url_root.split('/')[-2] + '_' + temp_fname
+                        # pdb.set_trace()
+                        os.system('mv ' + temp_fname + ' ' + save_fname)
+                        noaa_files.pop(-1) # get rid of old file name
+                        noaa_files.append(save_fname) # add on new file name
                     else:
                         print ' ### %s already exists. ' % noaa_file
 
-  
-    # Process wind data (read straight from gziped file)
+    # pdb.set_trace()
+    # Process wind data (read straight from gzipped file)
     wind_data =[]
     for noaa_file in noaa_files:
         print ' ... processing ', noaa_file
@@ -132,13 +144,16 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
                 mn = int(data[mn_idx])
                 date = datetime(yr, mo, da, hr, mn)
             
-            direction = float(data[dir_idx])
-            speed = float(data[speed_idx])
-            u = -1.0 * speed * sin(direction*pi/180.0)  # convert to Oceanographic convention
-            v = -1.0 * speed * cos(direction*pi/180.0)
-            
-            if speed != 99.0:
-                wind_data.append( (date, u, v, direction, speed) )
+            # if 'realtime2' in noaa_file and data[dir_idx]=='MM':
+            #     pdb.set_trace()
+            if not data[dir_idx] == 'MM': # if =='MM' don't want line
+                direction = float(data[dir_idx])
+                speed = float(data[speed_idx])
+                u = -1.0 * speed * sin(direction*pi/180.0)  # convert to Oceanographic convention
+                v = -1.0 * speed * cos(direction*pi/180.0)
+                
+                if speed != 99.0:
+                    wind_data.append( (date, u, v, direction, speed) )
     
     wind_data =  np.array( wind_data, 
                     dtype=[('date','O'),
