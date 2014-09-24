@@ -59,6 +59,7 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
         for line in lines:
             m = p.search(line)
             if m:
+                # pdb.set_trace()
                 noaa_file = m.group()
                 noaa_files.append(noaa_file)
                 if not os.path.exists(noaa_file):
@@ -66,12 +67,29 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
                     urllib.urlretrieve(url_root + noaa_file, noaa_file)
                 else:
                     print ' ### %s already exists. ' % noaa_file
+            else: # if txt.gz doesn't exist, check for just .txt
+                ptxt = re.compile(station_id + '\w*\.txt')
+                m = ptxt.search(line)
+                if m:
+                    # pdb.set_trace()
+                    noaa_file = m.group()
+                    noaa_files.append(noaa_file)
+                    if not os.path.exists(noaa_file):
+                        print ' ### Downloading ', url_root + noaa_file
+                        urllib.urlretrieve(url_root + noaa_file, noaa_file)
+                    else:
+                        print ' ### %s already exists. ' % noaa_file
+
   
     # Process wind data (read straight from gziped file)
     wind_data =[]
     for noaa_file in noaa_files:
         print ' ... processing ', noaa_file
-        f = gzip.open(noaa_file)
+        # pdb.set_trace()
+        if '.gz' in noaa_file:
+            f = gzip.open(noaa_file)
+        else:
+            f = open(noaa_file)
         line = f.readline()
         if line[0] == '#':
             line = line[1:]
