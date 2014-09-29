@@ -58,8 +58,8 @@ for i,year in enumerate(years):
 	acrossvar[i] = np.var(across[ind])
 
 # indices for hab/non-hab years
-habyears = np.array([[0,1,3,4,9,10,13,15,16,17]])
-nhabyears = np.array([[2,5,6,7,8,11,12,14]])
+habyears = np.array([[0,1,3,4,9,10,13,15,16]])
+nhabyears = np.array([[2,5,6,7,8,11,12,14,17]])
 
 # Mean
 fig = plt.figure()
