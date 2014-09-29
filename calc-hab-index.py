@@ -10,6 +10,9 @@ import netCDF4 as netCDF
 import matplotlib.pyplot as plt
 import pandas
 
+# Run September or April wind index
+wcase = 'April' # 'September' or 'April'
+
 # get wind from noaa
 wind = retrieve_noaa_winds('ptat2')
 
@@ -42,20 +45,23 @@ acrossmean = np.ones(len(years))*np.nan
 acrossvar = np.ones(len(years))*np.nan
 for i,year in enumerate(years):
 
-	# calculate mean just for september for each year
-	ind = (t>=datetime(year,9,1,0))*(t<=datetime(year,10,1,0))
+    # calculate mean just for 1 month for each year
+    if wcase == 'April':
+        ind = (t>=datetime(year,4,1,0))*(t<=datetime(year,5,1,0))
+    elif wcase == 'September':
+        ind = (t>=datetime(year,9,1,0))*(t<=datetime(year,10,1,0))
 
-	df = pandas.DataFrame(along[ind])
-	win = pandas.rolling_sum(df, window=72)#, win_type='boxcar')
-	alongwinmean[i] = win.min()
+    df = pandas.DataFrame(along[ind])
+    win = pandas.rolling_sum(df, window=72)#, win_type='boxcar')
+    alongwinmean[i] = win.min()
 
-	alongmax[i] = abs(along[ind]).max()
-	alongcsmax[i] = np.cumsum(along[ind]).min()
-	alongmed[i] = np.median(along[ind])
-	alongmean[i] = along[ind].mean()
-	alongvar[i] = np.var(along[ind])
-	acrossmean[i] = across[ind].mean()
-	acrossvar[i] = np.var(across[ind])
+    alongmax[i] = abs(along[ind]).max()
+    alongcsmax[i] = np.cumsum(along[ind]).min()
+    alongmed[i] = np.median(along[ind])
+    alongmean[i] = along[ind].mean()
+    alongvar[i] = np.var(along[ind])
+    acrossmean[i] = across[ind].mean()
+    acrossvar[i] = np.var(across[ind])
 
 # indices for hab/non-hab years
 habyears = np.array([[0,1,3,4,9,10,13,15,16]])
@@ -68,9 +74,15 @@ ax.plot(years, alongmean, 'go', ms=10)
 ax.plot(years[habyears], alongmean[habyears], 'ro', ms=10)
 ax.plot(years[nhabyears], alongmean[nhabyears], 'ko', ms=10)
 ax.set_xlim(1995,2015)
-ax.set_ylabel('Mean September along-shore wind [ms$^{-1}$]', fontsize=14)
+if wcase == 'April':
+    ax.set_ylabel('Mean April along-shore wind [ms$^{-1}$]', fontsize=14)
+elif wcase == 'September':
+    ax.set_ylabel('Mean September along-shore wind [ms$^{-1}$]', fontsize=14)
 ax.set_xlabel('Year', fontsize=14)
-fig.savefig('hab-index.pdf', bbox_inches='tight')
+if wcase == 'April':
+    fig.savefig('hab-index-april.pdf', bbox_inches='tight')
+elif wcase == 'September':
+    fig.savefig('hab-index-september.pdf', bbox_inches='tight')
 plt.show()
 
 
