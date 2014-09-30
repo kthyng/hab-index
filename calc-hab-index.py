@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pandas
 
 # Run September or April wind index
-wcase = 'April' # 'September' or 'April'
+wcase = 'September' # 'September' or 'April'
 
 # get wind from noaa
 wind = retrieve_noaa_winds('ptat2')
@@ -70,7 +70,7 @@ nhabyears = np.array([[2,5,6,7,8,11,12,14,17]])
 # Mean
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.plot(years, alongmean, 'go', ms=10)
+ax.plot(years, alongmean, 'o', color='blue', ms=10)
 ax.plot(years[habyears], alongmean[habyears], 'ro', ms=10)
 ax.plot(years[nhabyears], alongmean[nhabyears], 'ko', ms=10)
 ax.set_xlim(1995,2015)
@@ -79,6 +79,11 @@ if wcase == 'April':
 elif wcase == 'September':
     ax.set_ylabel('Mean September along-shore wind [ms$^{-1}$]', fontsize=14)
 ax.set_xlabel('Year', fontsize=14)
+ax.set_title('HAB index')
+# Legend
+ax.text(0.02, 0.12, 'HAB year', color='red', fontsize=14, transform=ax.transAxes)
+ax.text(0.02, 0.07, 'non-HAB year', color='black', fontsize=14, transform=ax.transAxes)
+ax.text(0.02, 0.02, 'This year', color='blue', fontsize=14, transform=ax.transAxes)
 if wcase == 'April':
     fig.savefig('hab-index-april.pdf', bbox_inches='tight')
 elif wcase == 'September':
