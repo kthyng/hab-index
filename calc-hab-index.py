@@ -31,7 +31,7 @@ along = u*np.cos(theta)-v*np.sin(theta)
 across = u*np.sin(theta)+v*np.cos(theta)
 
 # years = np.array([2004,2007,2008,2010,2005,2006,2009,2011])
-years = np.arange(1996,2015)
+years = np.arange(1996, datetime.today().year+1)
 
 # This is the HAB index
 alongmean = np.ones(len(years))*np.nan
@@ -64,8 +64,9 @@ for i,year in enumerate(years):
     acrossvar[i] = np.var(across[ind])
 
 # indices for hab/non-hab years
+# These are through 2014
 habyears = np.array([[0,1,3,4,9,10,13,15,16]])
-nhabyears = np.array([[2,5,6,7,8,11,12,14,17]])
+nhabyears = np.array([[2,5,6,7,8,11,12,14,17, 18]])
 
 # Mean
 fig = plt.figure()
@@ -73,7 +74,7 @@ ax = fig.add_subplot(111)
 ax.plot(years, alongmean, 'o', color='blue', ms=10)
 ax.plot(years[habyears], alongmean[habyears], 'ro', ms=10)
 ax.plot(years[nhabyears], alongmean[nhabyears], 'ko', ms=10)
-ax.set_xlim(1995,2015)
+ax.set_xlim(1995, datetime.today().year + 1)
 if wcase == 'April':
     ax.set_ylabel('Mean April along-shore wind [ms$^{-1}$]', fontsize=14)
 elif wcase == 'September':
