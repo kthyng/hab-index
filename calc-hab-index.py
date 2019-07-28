@@ -9,6 +9,7 @@ import pdb
 import netCDF4 as netCDF
 import matplotlib.pyplot as plt
 import pandas
+from matplotlib.mlab import find
 
 # Run September or April wind index
 wcase = 'September' # 'September' or 'April'
@@ -65,31 +66,81 @@ for i,year in enumerate(years):
 
 # indices for hab/non-hab years
 # These are through 2014
-habyears = np.array([[0,1,3,4,9,10,13,15,16]])
+habyears = np.array([[0,1,3,4,9,10,13,15,16, 19]])
 nhabyears = np.array([[2,5,6,7,8,11,12,14,17, 18]])
 
-# Mean
+# # Mean
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# # Plot means
+# ax.plot(years, alongmean, 'o', color='blue', ms=10)
+# ax.plot(years[habyears], alongmean[habyears], 'ro', ms=10)
+# ax.plot(years[nhabyears], alongmean[nhabyears], 'ko', ms=10)
+# ax.set_xlim(1995, datetime.today().year + 1)
+# if wcase == 'April':
+#     ax.set_ylabel('Mean April along-shore wind [ms$^{-1}$]', fontsize=14)
+# elif wcase == 'September':
+#     ax.set_ylabel('Mean September along-shore wind [ms$^{-1}$]', fontsize=14)
+# ax.set_xlabel('Year', fontsize=14)
+# ax.set_title('HAB index')
+# # Legend
+# ax.text(0.02, 0.12, 'HAB year', color='red', fontsize=14, transform=ax.transAxes)
+# ax.text(0.02, 0.07, 'non-HAB year', color='black', fontsize=14, transform=ax.transAxes)
+# ax.text(0.02, 0.02, 'This year', color='blue', fontsize=14, transform=ax.transAxes)
+# if wcase == 'April':
+#     fig.savefig('hab-index-april.pdf', bbox_inches='tight')
+# elif wcase == 'September':
+#     fig.savefig('hab-index-september.pdf', bbox_inches='tight')
+# plt.show()
+
+
+# Plot showing all of September
+# f, axes = plt.subplots(1, years.size, sharey=True)
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.plot(years, alongmean, 'o', color='blue', ms=10)
-ax.plot(years[habyears], alongmean[habyears], 'ro', ms=10)
-ax.plot(years[nhabyears], alongmean[nhabyears], 'ko', ms=10)
-ax.set_xlim(1995, datetime.today().year + 1)
-if wcase == 'April':
-    ax.set_ylabel('Mean April along-shore wind [ms$^{-1}$]', fontsize=14)
-elif wcase == 'September':
-    ax.set_ylabel('Mean September along-shore wind [ms$^{-1}$]', fontsize=14)
-ax.set_xlabel('Year', fontsize=14)
-ax.set_title('HAB index')
-# Legend
-ax.text(0.02, 0.12, 'HAB year', color='red', fontsize=14, transform=ax.transAxes)
-ax.text(0.02, 0.07, 'non-HAB year', color='black', fontsize=14, transform=ax.transAxes)
-ax.text(0.02, 0.02, 'This year', color='blue', fontsize=14, transform=ax.transAxes)
-if wcase == 'April':
-    fig.savefig('hab-index-april.pdf', bbox_inches='tight')
-elif wcase == 'September':
-    fig.savefig('hab-index-september.pdf', bbox_inches='tight')
-plt.show()
+for i, year in enumerate(years):
+
+    # calculate direction for each time available for September for each year
+    inds = find((t >= datetime(year, 9, 1, 0))*(t < datetime(year, 10, 1, 0)))
+    days = []
+    [days.append(t[ind].day + t[ind].hour/24.) for ind in inds]
+    alongmean[i] = along[inds].mean()
+
+    # HAB years
+    if t[inds[0]].year in [1996, 1997, 1999, 2000, 2005, 2006, 2009, 2011, 2012, 2015]:
+        color = 'r'
+    # non-HAB years
+    elif t[inds[0]].year in [1998, 2001, 2002, 2003, 2004, 2007, 2008, 2010, 2013, 2014]:
+        color = 'k'
+    # for j, ind in enumerate(inds):
+        # Plot individual points
+    ax.plot(days, along[inds], '-', color=color, lw=3, alpha=0.6)
+    # ax.plot(t[inds], along[inds], '-', color='0.2', lw=3, alpha=0.1)
+    # Plot means
+    # ax.plot([days[0], days[-1]], [alongmean[i], alongmean[i]], '-', color=color, lw=5, alpha=0.7)
+    # ax.plot([t[inds][0], t[inds][-1]], [alongmean[i], alongmean[i]], '-', color=color, lw=5, alpha=0.7)
+
+    axes[i].set_xlim(t[inds[0]], t[inds[-1]])
+
+
+    # ax.plot(years[nhabyears], alongmean[nhabyears], 'ko', ms=10)
+    ax.set_xlim(1995, datetime.today().year + 1)
+    if wcase == 'April':
+        ax.set_ylabel('Mean April along-shore wind [ms$^{-1}$]', fontsize=14)
+    elif wcase == 'September':
+        ax.set_ylabel('Mean September along-shore wind [ms$^{-1}$]', fontsize=14)
+    ax.set_xlabel('Year', fontsize=14)
+    ax.set_title('HAB index')
+    # Legend
+    ax.text(0.02, 0.12, 'HAB year', color='red', fontsize=14, transform=ax.transAxes)
+    ax.text(0.02, 0.07, 'non-HAB year', color='black', fontsize=14, transform=ax.transAxes)
+    ax.text(0.02, 0.02, 'This year', color='blue', fontsize=14, transform=ax.transAxes)
+    if wcase == 'April':
+        fig.savefig('hab-index-april.pdf', bbox_inches='tight')
+    elif wcase == 'September':
+        fig.savefig('hab-index-september.pdf', bbox_inches='tight')
+    plt.show()
+
 
 
 # # Along Variance
@@ -171,4 +222,4 @@ plt.show()
 
 
 # if __name__ == "__main__":
-#     run()    
+#     run()

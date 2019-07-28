@@ -1,6 +1,6 @@
 
 import urllib
-import urllib2
+# import urllib2
 import re
 import gzip
 import os
@@ -16,14 +16,14 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
     """Read NOAA winds from web site or file
 
     Rob's file, adjust by Kristen
-    
+
     Parameters
     ----------
     station_id : string
         The id of the station, like 'burl1' or '42040'
     data_type : ('hourly' or 'h', 'continuous' or 'c')
         The type of data to collect.  Continuous winds are every 10 min.
-    
+
     Returns
     -------
     noaa_wind : ndarray
@@ -33,7 +33,7 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
             v           : (NS) wind component.
             direction   : Direction of wind []
             speed       : Wind speed [m/s]
-    
+
     """
 
     # Get data, historical and through almost present day
@@ -53,13 +53,13 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
     for mon in mons:
         url_roots.append(url_root_new + mon + '/')
     url_roots.append(url_root_recent)
-    
+
     p = re.compile(station_id + '\w*\.txt\.gz', re.IGNORECASE)
     noaa_files = []
     for url_root in url_roots:
         # if 'realtime' in url_root:
-        #     pdb.set_trace()
-        lines = urllib2.urlopen(url_root).readlines()
+        pdb.set_trace()
+        lines = urllib.request.urlopen(url_root).readlines()
         for line in lines:
             m = p.search(line)
             if m:
@@ -68,10 +68,10 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
                 noaa_files.append(noaa_file)
                 if not noaa_file in os.listdir('.'):
                 # if not os.path.exists(noaa_file):
-                    print ' ### Downloading ', url_root + noaa_file
+                    print(' ### Downloading ', url_root + noaa_file)
                     urllib.urlretrieve(url_root + noaa_file, noaa_file)
                 else:
-                    print ' ### %s already exists. ' % noaa_file
+                    print(' ### %s already exists. ' % noaa_file)
             else: # if txt.gz doesn't exist, check for just .txt
                 ptxt = re.compile(station_id + '\w*\.txt', re.IGNORECASE)
                 m = ptxt.search(line)
@@ -81,7 +81,7 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
                     noaa_files.append(noaa_file)
                     if not noaa_file in os.listdir('.'):
                     # if not os.path.exists(noaa_file):
-                        print ' ### Downloading ', url_root + noaa_file
+                        print(' ### Downloading ', url_root + noaa_file)
                         temp_fname, headers = urllib.urlretrieve(url_root + noaa_file, noaa_file)
                         # resave file to a new name
                         save_fname = url_root.split('/')[-2] + '_' + temp_fname
@@ -90,13 +90,13 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
                         noaa_files.pop(-1) # get rid of old file name
                         noaa_files.append(save_fname) # add on new file name
                     else:
-                        print ' ### %s already exists. ' % noaa_file
+                        print(' ### %s already exists. ' % noaa_file)
 
     # pdb.set_trace()
     # Process wind data (read straight from gzipped file)
     wind_data =[]
     for noaa_file in noaa_files:
-        print ' ... processing ', noaa_file
+        print(' ... processing ', noaa_file)
         # pdb.set_trace()
         if '.gz' in noaa_file:
             f = gzip.open(noaa_file)
@@ -124,7 +124,7 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
         if 'WDIR' in dataline:
             dir_idx = dataline.index('WDIR')
         elif 'DIR' in dataline:
-            dir_idx = dataline.index('DIR')            
+            dir_idx = dataline.index('DIR')
         else:
             dir_idx = dataline.index('WD')
         for line in f.readlines():
@@ -143,7 +143,7 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
             else:
                 mn = int(data[mn_idx])
                 date = datetime(yr, mo, da, hr, mn)
-            
+
             # if 'realtime2' in noaa_file and data[dir_idx]=='MM':
             #     pdb.set_trace()
             if not data[dir_idx] == 'MM': # if =='MM' don't want line
@@ -151,19 +151,19 @@ def retrieve_noaa_winds(station_id, data_type='hourly'):
                 speed = float(data[speed_idx])
                 u = -1.0 * speed * sin(direction*pi/180.0)  # convert to Oceanographic convention
                 v = -1.0 * speed * cos(direction*pi/180.0)
-                
+
                 if speed != 99.0:
                     wind_data.append( (date, u, v, direction, speed) )
-    
-    wind_data =  np.array( wind_data, 
+
+    wind_data =  np.array( wind_data,
                     dtype=[('date','O'),
-                           ('u','double'), ('v','double'), 
+                           ('u','double'), ('v','double'),
                            ('direction', 'double'), ('speed', 'double')])
-    
+
     wind_data.sort(order='date')
     ud = np.unique(wind_data['date'])
     idx = wind_data['date'].searchsorted(ud)
-    
+
     return wind_data[idx]
 
 
@@ -182,4 +182,3 @@ if __name__ == '__main__':
     np.save('noaa_42040c', noaa_42040c)
     noaa_42040h = retrieve_noaa_winds('42040', 'h')
     np.save('noaa_42040h', noaa_42040h)
-
